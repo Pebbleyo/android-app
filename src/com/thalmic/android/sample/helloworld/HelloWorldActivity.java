@@ -6,7 +6,6 @@
 package com.thalmic.android.sample.helloworld;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PointF;
@@ -46,6 +45,13 @@ import java.util.UUID;
 public class HelloWorldActivity extends Activity {
     // This code will be returned in onActivityResult() when the enable Bluetooth activity exits.
 
+    private static final int STATE_READY = 0;
+    private static final int STATE_MESSAGE_RECEIVED_UNREAD = 1;
+    private static final int STATE_MESSAGE_RECEIVED_READING = 2;
+    private static final int STATE_RESPONDING = 3;
+    private static final int STATE_COMPOSING = 4;
+    private int state;
+
     private static final int REQUEST_ENABLE_BT = 1;
 
     private final static UUID PEBBLE_APP_UUID = UUID.fromString("1d139f51-14b0-4a9e-882e-91df056ff7fe");
@@ -54,15 +60,17 @@ public class HelloWorldActivity extends Activity {
     private Message currentMessage;
     private boolean currentlyViewingMessage = false;
 
+    private String draftMessage = "";
+
     private TextView mTextView;
-    private float lastScrollPitch;
+    private Float baseScrollPitch;
     private float roll;
     private float pitch;
     private float yaw;
 
     private boolean currentlyDrawing = false;
-    private float lastDrawPitch;
-    private float lastDrawYaw;
+    private Float baseDrawPitch;
+    private Float baseDrawYaw;
 
     private Pose currentPose;
     // Classes that inherit from AbstractDeviceListener can be used to receive events from Myo devices.
@@ -113,42 +121,48 @@ public class HelloWorldActivity extends Activity {
             roll = (float) Math.toDegrees(Quaternion.roll(rotation));
             pitch = (float) Math.toDegrees(Quaternion.pitch(rotation));
             yaw = (float) Math.toDegrees(Quaternion.yaw(rotation));
+
             // Adjust roll and pitch for the orientation of the Myo on the arm.
             if (mXDirection == XDirection.TOWARD_ELBOW) {
                 roll *= -1;
                 pitch *= -1;
             }
-            // Next, we apply a rotation to the text view using the roll, pitch, and yaw.
-//            mTextView.setRotation(roll);
-//            mTextView.setRotationX(pitch);
-//            mTextView.setRotationY(yaw);
 
-            if (!currentlyViewingMessage) {
-                lastScrollPitch = pitch;
-            } else {
-                mListView.setItemChecked((int) ((pitch - lastScrollPitch) / 5), true);
-            }
-
-            if (!currentlyDrawing) {
-                lastDrawPitch = pitch;
-                lastDrawYaw = yaw;
-            } else {
-                int x = 150 - (int) (Math.sin((yaw - lastDrawYaw)     * Math.PI / 180) * 200);
-                int y = 150 + (int) (Math.sin((pitch - lastDrawPitch) * Math.PI / 180) * 200);
-
-                mCircleView.setCircleLocation(x, y);
-
-                if (currentPose == Pose.FIST) {
-                    if (currentStroke == null) {
-                        currentStroke = new Stroke();
+            switch (state) {
+                case STATE_READY:
+                    break;
+                case STATE_MESSAGE_RECEIVED_UNREAD:
+                    if (roll < 10 && roll > -10 && pitch > 0) {
+                        state = STATE_MESSAGE_RECEIVED_READING;
                     }
-                    currentStroke.addPoint(new PointF(x, y));
-                } else {
-                    if (currentStroke != null) {
-                        strokes.add(currentStroke);
-                        currentStroke = null;
+                    break;
+                case STATE_MESSAGE_RECEIVED_READING:
+                    break;
+                case STATE_RESPONDING:
+                    if (baseScrollPitch == null) baseScrollPitch = pitch;
+                    mListView.setItemChecked((int) ((pitch - baseScrollPitch) / 5), true);
+                    break;
+                case STATE_COMPOSING:
+                    if (baseDrawPitch == null) baseDrawPitch = pitch;
+                    if (baseDrawYaw == null) baseDrawYaw = yaw;
+
+                    int x = 150 - (int) (Math.sin((yaw - baseDrawYaw)     * Math.PI / 180) * 200);
+                    int y = 150 + (int) (Math.sin((pitch - baseDrawPitch) * Math.PI / 180) * 200);
+
+                    mCircleView.setCircleLocation(x, y);
+
+                    if (currentPose == Pose.FIST) {
+                        if (currentStroke == null) {
+                            currentStroke = new Stroke();
+                        }
+                        currentStroke.addPoint(new PointF(x, y));
+                    } else {
+                        if (currentStroke != null) {
+                            strokes.add(currentStroke);
+                            currentStroke = null;
+                        }
                     }
-                }
+                    break;
             }
         }
 
@@ -195,41 +209,44 @@ public class HelloWorldActivity extends Activity {
                 case FIST:
                     mTextView.setText("Pose at fist");
 
-                    if (!currentlyViewingMessage && currentMessage != null) {
-                        displayMessageResponses(currentMessage);
+                    if (state == STATE_MESSAGE_RECEIVED_READING) {
+                        setState(STATE_RESPONDING);
+                    } else if (state == STATE_COMPOSING) {
+                        finishComposition();
                     }
-
-
 
                     break;
                 case WAVE_IN:
                     mTextView.setText("Pose at wave in");
 
-                    if (!currentlyDrawing) {
-                        startDrawing();
+                    if (state == STATE_COMPOSING) {
+                        if (mArm == Arm.LEFT) {
+                            nextLetter();
+                        } else {
+                            backspace();
+                        }
                     }
-
-                    data.addInt8(11, (byte) 3);
-                    PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
 
                     break;
                 case WAVE_OUT:
                     mTextView.setText("Pose at wave out");
 
-                    if (currentlyDrawing) {
-                        stopDrawing();
+                    if (state == STATE_COMPOSING) {
+                        if (mArm == Arm.RIGHT) {
+                            nextLetter();
+                        } else {
+                            backspace();
+                        }
                     }
-
-                    data.addInt8(11, (byte) 2);
-                    PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
 
                     break;
                 case FINGERS_SPREAD:
                     mTextView.setText("Pose at fingers spread");
 
-                    if (currentlyViewingMessage) {
-                        clearMessageResponses();
+                    if (state == STATE_MESSAGE_RECEIVED_READING) {
+                        setState(STATE_READY);
                     }
+
                     break;
                 case THUMB_TO_PINKY:
                     mTextView.setText("Pose at thumb to pinky");
@@ -237,6 +254,23 @@ public class HelloWorldActivity extends Activity {
             }
         }
     };
+
+    private boolean setState(int newState) {
+        if (state == newState) return false;
+
+        switch (newState) {
+            case STATE_READY:
+                clearMessageResponses();
+                break;
+            case STATE_COMPOSING:
+                startDrawing();
+                break;
+        }
+
+        state = newState;
+        return true;
+    }
+
     private TextView mTimeTextView;
     private ListView mListView;
     private CircleView mCircleView;
@@ -334,9 +368,6 @@ public class HelloWorldActivity extends Activity {
             case R.id.message:
                 onNewMessage(new Message(String.format("Test %d", System.currentTimeMillis())));
                 return true;
-            case R.id.startDraw:
-                startDrawing();
-                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -370,14 +401,36 @@ public class HelloWorldActivity extends Activity {
         // TODO: go to next message in the queue
     }
 
+    private void newComposition() {
+        draftMessage = "";
+        startDrawing();
+    }
+
+    private void nextLetter() {
+        draftMessage += stopDrawing();
+        startDrawing();
+    }
+
+    private void backspace() {
+        if (strokes.size() > 0) {
+            strokes = new ArrayList<Stroke>();
+        } else {
+            draftMessage = draftMessage.substring(0, draftMessage.length()-1);
+        }
+    }
+
+    private void finishComposition() {
+        draftMessage += stopDrawing();
+        Toast.makeText(this, draftMessage, Toast.LENGTH_SHORT).show();
+    }
+
     private void startDrawing() {
         currentlyDrawing = true;
         strokes = new ArrayList<Stroke>();
     }
 
-    private void stopDrawing() {
+    private String stopDrawing() {
         currentlyDrawing = false;
-
         String character;
 
         if (strokes.size() > 0) {
@@ -403,6 +456,8 @@ public class HelloWorldActivity extends Activity {
         }
 
         Toast.makeText(this, character, Toast.LENGTH_SHORT).show();
+
+        return character;
     }
 }
 
