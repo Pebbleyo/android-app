@@ -231,18 +231,17 @@ public class HelloWorldActivity extends Activity {
                 case FINGERS_SPREAD:
                     mTextView.setText("Pose at fingers spread");
 
-                    if (state == STATE_MESSAGE_RECEIVED_READING) {
-                        setState(STATE_READY);
+                    switch (state) {
+                        case STATE_MESSAGE_RECEIVED_READING:
+                        case STATE_COMPOSING:
+                        case STATE_RESPONDING:
+                            setState(STATE_READY);
+                            break;
                     }
 
                     break;
                 case THUMB_TO_PINKY:
                     mTextView.setText("Pose at thumb to pinky");
-
-                    if (state == STATE_COMPOSING) {
-                        send(new Message(composition.finish()));
-                    }
-
                     break;
             }
         }
