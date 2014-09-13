@@ -14,11 +14,11 @@ public class Message {
         return mText;
     }
 
-    public List<String> getResponses() {
-        List<String> list = new ArrayList<String>();
+    public MessageResponses getResponses() {
+        MessageResponses list = new MessageResponses();
 
         for (int i=0; i<5; i++) {
-            list.add(Double.toString(Math.random()));
+            list.add(new Message(Double.toString(Math.random())));
         }
 
         return list;

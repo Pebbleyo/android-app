@@ -8,7 +8,6 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.PointF;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -21,9 +20,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.canvas.AssetInstaller;
 import com.canvas.LipiTKJNIInterface;
-import com.canvas.LipitkResult;
-import com.canvas.Stroke;
-import com.getpebble.android.kit.PebbleKit;
 import com.getpebble.android.kit.util.PebbleDictionary;
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.Arm;
@@ -58,9 +54,8 @@ public class HelloWorldActivity extends Activity {
 
     private Queue<Message> messageQueue = new LinkedList<Message>();
     private Message currentMessage;
-    private boolean currentlyViewingMessage = false;
-
-    private String draftMessage = "";
+    private MessageResponses currentResponses;
+    private int currentIndex;
 
     private TextView mTextView;
     private Float baseScrollPitch;
@@ -68,7 +63,6 @@ public class HelloWorldActivity extends Activity {
     private float pitch;
     private float yaw;
 
-    private boolean currentlyDrawing = false;
     private Float baseDrawPitch;
     private Float baseDrawYaw;
 
@@ -133,7 +127,7 @@ public class HelloWorldActivity extends Activity {
                     break;
                 case STATE_MESSAGE_RECEIVED_UNREAD:
                     if (roll < 10 && roll > -10 && pitch > 0) {
-                        state = STATE_MESSAGE_RECEIVED_READING;
+                        setState(STATE_MESSAGE_RECEIVED_READING);
                     }
                     break;
                 case STATE_MESSAGE_RECEIVED_READING:
@@ -152,15 +146,9 @@ public class HelloWorldActivity extends Activity {
                     mCircleView.setCircleLocation(x, y);
 
                     if (currentPose == Pose.FIST) {
-                        if (currentStroke == null) {
-                            currentStroke = new Stroke();
-                        }
-                        currentStroke.addPoint(new PointF(x, y));
+                        composition.addPoint(x, y);
                     } else {
-                        if (currentStroke != null) {
-                            strokes.add(currentStroke);
-                            currentStroke = null;
-                        }
+                        composition.endStroke();
                     }
                     break;
             }
@@ -211,8 +199,8 @@ public class HelloWorldActivity extends Activity {
 
                     if (state == STATE_MESSAGE_RECEIVED_READING) {
                         setState(STATE_RESPONDING);
-                    } else if (state == STATE_COMPOSING) {
-                        finishComposition();
+                    } else if (state == STATE_RESPONDING) {
+                        send(currentResponses.get(currentIndex));
                     }
 
                     break;
@@ -221,9 +209,9 @@ public class HelloWorldActivity extends Activity {
 
                     if (state == STATE_COMPOSING) {
                         if (mArm == Arm.LEFT) {
-                            nextLetter();
+                            composition.next();
                         } else {
-                            backspace();
+                            composition.back();
                         }
                     }
 
@@ -233,9 +221,9 @@ public class HelloWorldActivity extends Activity {
 
                     if (state == STATE_COMPOSING) {
                         if (mArm == Arm.RIGHT) {
-                            nextLetter();
+                            composition.next();
                         } else {
-                            backspace();
+                            composition.back();
                         }
                     }
 
@@ -250,10 +238,16 @@ public class HelloWorldActivity extends Activity {
                     break;
                 case THUMB_TO_PINKY:
                     mTextView.setText("Pose at thumb to pinky");
+
+                    if (state == STATE_COMPOSING) {
+                        send(new Message(composition.finish()));
+                    }
+
                     break;
             }
         }
     };
+    private Composition composition;
 
     private boolean setState(int newState) {
         if (state == newState) return false;
@@ -261,11 +255,16 @@ public class HelloWorldActivity extends Activity {
         switch (newState) {
             case STATE_READY:
                 clearMessageResponses();
+                composition.finish();
+                currentMessage = null;
+                currentIndex = -1;
                 break;
             case STATE_RESPONDING:
                 displayMessageResponses(currentMessage);
+                break;
             case STATE_COMPOSING:
-                startDrawing();
+                composition = new Composition();
+                composition.start();
                 break;
         }
 
@@ -276,9 +275,6 @@ public class HelloWorldActivity extends Activity {
     private TextView mTimeTextView;
     private ListView mListView;
     private CircleView mCircleView;
-    private LipiTKJNIInterface _recognizer;
-    private Stroke currentStroke;
-    private ArrayList<Stroke> strokes;
     private Pebble pebble;
 
     @Override
@@ -310,20 +306,7 @@ public class HelloWorldActivity extends Activity {
             Log.i(getLocalClassName(), "Starting app with UUID " + PEBBLE_APP_UUID.toString());
         }
 
-        // Install required assets for LipiTk recognition
-        AssetInstaller assetInstaller = new AssetInstaller(getApplicationContext(), "projects");
-        try {
-            assetInstaller.execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Initialize lipitk
-        File externalFileDir = getApplicationContext().getExternalFilesDir(null);
-        String path = externalFileDir.getPath();
-        Log.d("JNI", "Path: " + path);
-        _recognizer = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
-        _recognizer.initialize();
+        Composition.init(this);
     }
     @Override
     protected void onResume() {
@@ -394,76 +377,19 @@ public class HelloWorldActivity extends Activity {
         mTimeTextView.setText(message.toString());
     }
 
+    private void send(Message message) {
+        Toast.makeText(this, message.toString(), Toast.LENGTH_SHORT).show();
+        setState(STATE_READY);
+    }
+
     private void displayMessageResponses(Message message) {
-        currentlyViewingMessage = true;
-        mListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, message.getResponses()));
+        currentResponses = message.getResponses();
+        mListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, currentResponses.getStringList()));
     }
 
     private void clearMessageResponses() {
-        currentlyViewingMessage = false;
         mListView.setAdapter(null);
 
         // TODO: go to next message in the queue
     }
-
-    private void newComposition() {
-        draftMessage = "";
-        startDrawing();
-    }
-
-    private void nextLetter() {
-        draftMessage += stopDrawing();
-        startDrawing();
-    }
-
-    private void backspace() {
-        if (strokes.size() > 0) {
-            strokes = new ArrayList<Stroke>();
-        } else {
-            draftMessage = draftMessage.substring(0, draftMessage.length()-1);
-        }
-    }
-
-    private void finishComposition() {
-        draftMessage += stopDrawing();
-        Toast.makeText(this, draftMessage, Toast.LENGTH_SHORT).show();
-    }
-
-    private void startDrawing() {
-        currentlyDrawing = true;
-        strokes = new ArrayList<Stroke>();
-    }
-
-    private String stopDrawing() {
-        currentlyDrawing = false;
-        String character;
-
-        if (strokes.size() > 0) {
-            Stroke[] strokesArray = new Stroke[strokes.size()];
-            for (int s = 0; s < strokes.size(); s++)
-                strokesArray[s] = strokes.get(s);
-
-            LipitkResult[] results = _recognizer.recognize(strokesArray);
-
-            for (LipitkResult result : results) {
-                Log.e("jni", "ShapeID = " + result.Id + " Confidence = " + result.Confidence);
-            }
-
-            String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
-            //        character=new String[results.length];
-            //        for(int i=0;i<character.length;i++){
-            //            character[i] = _recognizer.getSymbolName(results[i].Id, configFileDirectory);
-            //        }
-
-            character = _recognizer.getSymbolName(results[0].Id, configFileDirectory);
-        } else {
-            character = " ";
-        }
-
-        Toast.makeText(this, character, Toast.LENGTH_SHORT).show();
-
-        return character;
-    }
 }
-
-
