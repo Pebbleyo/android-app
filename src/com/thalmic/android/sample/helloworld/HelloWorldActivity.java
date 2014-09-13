@@ -19,6 +19,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.getpebble.android.kit.PebbleKit;
+import com.getpebble.android.kit.util.PebbleDictionary;
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.Arm;
 import com.thalmic.myo.DeviceListener;
@@ -38,7 +39,7 @@ public class HelloWorldActivity extends Activity {
 
     private static final int REQUEST_ENABLE_BT = 1;
 
-    private final static UUID PEBBLE_APP_UUID = UUID.fromString("6e048a5d-61c8-470d-8319-ac3be4188f84");
+    private final static UUID PEBBLE_APP_UUID = UUID.fromString("1d139f51-14b0-4a9e-882e-91df056ff7fe");
 
     private Queue<Message> messageQueue = new LinkedList<Message>();
     private Message currentMessage;
@@ -139,6 +140,8 @@ public class HelloWorldActivity extends Activity {
 
             currentlyDrawing = (pose == Pose.FIST);
 
+            PebbleDictionary data = new PebbleDictionary();
+
             switch (pose) {
                 case UNKNOWN:
                     mTextView.setText("Pose unknown");
@@ -167,9 +170,17 @@ public class HelloWorldActivity extends Activity {
                     break;
                 case WAVE_IN:
                     mTextView.setText("Pose at wave in");
+
+                    data.addInt8(11, (byte) 3);
+                    PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
+
                     break;
                 case WAVE_OUT:
                     mTextView.setText("Pose at wave out");
+
+                    data.addInt8(11, (byte) 2);
+                    PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
+
                     break;
                 case FINGERS_SPREAD:
                     mTextView.setText("Pose at fingers spread");
