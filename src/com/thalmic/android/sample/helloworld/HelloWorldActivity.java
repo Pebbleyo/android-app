@@ -262,6 +262,8 @@ public class HelloWorldActivity extends Activity {
             case STATE_READY:
                 clearMessageResponses();
                 break;
+            case STATE_RESPONDING:
+                displayMessageResponses(currentMessage);
             case STATE_COMPOSING:
                 startDrawing();
                 break;
@@ -368,6 +370,9 @@ public class HelloWorldActivity extends Activity {
             case R.id.message:
                 onNewMessage(new Message(String.format("Test %d", System.currentTimeMillis())));
                 return true;
+            case R.id.startDraw:
+                setState(STATE_COMPOSING);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -379,7 +384,7 @@ public class HelloWorldActivity extends Activity {
 
     private void onNewMessage(Message message) {
         messageQueue.add(message);
-        if (!currentlyViewingMessage) {
+        if (state == STATE_READY || state == STATE_MESSAGE_RECEIVED_UNREAD) {
             currentMessage = messageQueue.poll();
             display(currentMessage);
         }
