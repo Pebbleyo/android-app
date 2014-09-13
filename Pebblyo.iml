@@ -27,6 +27,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="MyoSdk" />
+    <orderEntry type="module" module-name="PEBBLE_KIT" />
   </component>
 </module>
 

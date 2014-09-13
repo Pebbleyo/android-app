@@ -6,14 +6,18 @@
 package com.thalmic.android.sample.helloworld;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.getpebble.android.kit.PebbleKit;
+import com.getpebble.android.kit.util.PebbleDictionary;
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.Arm;
 import com.thalmic.myo.DeviceListener;
@@ -24,10 +28,14 @@ import com.thalmic.myo.Quaternion;
 import com.thalmic.myo.XDirection;
 import com.thalmic.myo.scanner.ScanActivity;
 
+import java.util.UUID;
+
 public class HelloWorldActivity extends Activity {
     // This code will be returned in onActivityResult() when the enable Bluetooth activity exits.
 
     private static final int REQUEST_ENABLE_BT = 1;
+
+    private final static UUID PEBBLE_APP_UUID = UUID.fromString("6e048a5d-61c8-470d-8319-ac3be4188f84");
 
     private TextView mTextView;
     // Classes that inherit from AbstractDeviceListener can be used to receive events from Myo devices.
@@ -92,6 +100,11 @@ public class HelloWorldActivity extends Activity {
             // Handle the cases of the Pose enumeration, and change the text of the text view
             // based on the pose we receive.
 
+//            PebbleDictionary data = new PebbleDictionary();
+////            data.addInt8(0, (byte) pose.ordinal());
+//            data.addString(0, "a");
+//            PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
+
             mTimeTextView.setText(Long.toString(timestamp));
 
             switch (pose) {
@@ -153,6 +166,28 @@ public class HelloWorldActivity extends Activity {
         }
         // Next, register for DeviceListener callbacks.
         hub.addListener(mListener);
+
+        boolean connected = PebbleKit.isWatchConnected(getApplicationContext());
+        Log.i(getLocalClassName(), "Pebble is " + (connected ? "connected" : "not connected"));
+
+        if (connected) {
+            PebbleKit.startAppOnPebble(getApplicationContext(), PEBBLE_APP_UUID);
+            Log.i(getLocalClassName(), "Starting app with UUID " + PEBBLE_APP_UUID.toString());
+        }
+
+        PebbleKit.registerReceivedAckHandler(getApplicationContext(), new PebbleKit.PebbleAckReceiver(PEBBLE_APP_UUID) {
+            @Override
+            public void receiveAck(Context context, int transactionId) {
+                Log.i(getLocalClassName(), "Received ack for transaction " + transactionId);
+            }
+        });
+
+        PebbleKit.registerReceivedNackHandler(getApplicationContext(), new PebbleKit.PebbleNackReceiver(PEBBLE_APP_UUID) {
+            @Override
+            public void receiveNack(Context context, int transactionId) {
+                Log.i(getLocalClassName(), "Received nack for transaction " + transactionId);
+            }
+        });
     }
     @Override
     protected void onResume() {
