@@ -120,7 +120,8 @@ public class HelloWorldActivity extends Activity {
                 lastDrawPitch = pitch;
                 lastDrawYaw = yaw;
             } else {
-                mCircleView.setCircleLocation(150 + (int) ((yaw - lastDrawYaw) * -3), 150 + (int) ((pitch - lastDrawPitch) * 3));
+                mCircleView.setCircleLocation(150 - (int) (Math.sin((yaw - lastDrawYaw)     * Math.PI / 180) * 200),
+                                              150 + (int) (Math.sin((pitch - lastDrawPitch) * Math.PI / 180) * 200));
             }
         }
         // onPose() is called whenever a Myo provides a new pose.
