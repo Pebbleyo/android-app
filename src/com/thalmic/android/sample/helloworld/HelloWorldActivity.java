@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -69,6 +70,8 @@ public class HelloWorldActivity extends Activity {
     private DeviceListener mListener = new AbstractDeviceListener() {
         private Arm mArm = Arm.UNKNOWN;
         private XDirection mXDirection = XDirection.UNKNOWN;
+        public Handler poseDebounceHandler = new Handler();
+
         // onConnect() is called whenever a Myo has been connected.
         @Override
         public void onConnect(Myo myo, long timestamp) {
@@ -148,9 +151,23 @@ public class HelloWorldActivity extends Activity {
                 }
             }
         }
+
+
         // onPose() is called whenever a Myo provides a new pose.
         @Override
-        public void onPose(Myo myo, long timestamp, Pose pose) {
+        public void onPose(final Myo myo, final long timestamp, final Pose pose) {
+            poseDebounceHandler.removeCallbacksAndMessages(null);
+            poseDebounceHandler.postDelayed(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        onPoseHeld(myo, timestamp, pose);
+                    }
+                }
+            , 100);
+        }
+
+        public void onPoseHeld(Myo myo, long timestamp, Pose pose) {
             // TODO: implement debouce on pose detection
 
             // Handle the cases of the Pose enumeration, and change the text of the text view
@@ -163,7 +180,8 @@ public class HelloWorldActivity extends Activity {
 
 //            mTimeTextView.setText(Long.toString(timestamp));
 
-            currentPose = pose;
+            if (currentPose == pose) return;
+            else currentPose = pose;
 
             PebbleDictionary data = new PebbleDictionary();
 
