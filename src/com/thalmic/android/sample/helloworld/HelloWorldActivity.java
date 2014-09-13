@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -20,6 +21,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.canvas.AssetInstaller;
 import com.canvas.LipiTKJNIInterface;
+import com.canvas.LipitkResult;
+import com.canvas.Stroke;
 import com.getpebble.android.kit.PebbleKit;
 import com.getpebble.android.kit.util.PebbleDictionary;
 import com.thalmic.myo.AbstractDeviceListener;
@@ -34,6 +37,7 @@ import com.thalmic.myo.scanner.ScanActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
@@ -55,10 +59,11 @@ public class HelloWorldActivity extends Activity {
     private float pitch;
     private float yaw;
 
-    private boolean currentlyDrawing;
+    private boolean currentlyDrawing = false;
     private float lastDrawPitch;
     private float lastDrawYaw;
 
+    private Pose currentPose;
     // Classes that inherit from AbstractDeviceListener can be used to receive events from Myo devices.
     // If you do not override an event, the default behavior is to do nothing.
     private DeviceListener mListener = new AbstractDeviceListener() {
@@ -125,13 +130,29 @@ public class HelloWorldActivity extends Activity {
                 lastDrawPitch = pitch;
                 lastDrawYaw = yaw;
             } else {
-                mCircleView.setCircleLocation(150 - (int) (Math.sin((yaw - lastDrawYaw)     * Math.PI / 180) * 200),
-                                              150 + (int) (Math.sin((pitch - lastDrawPitch) * Math.PI / 180) * 200));
+                int x = 150 - (int) (Math.sin((yaw - lastDrawYaw)     * Math.PI / 180) * 200);
+                int y = 150 + (int) (Math.sin((pitch - lastDrawPitch) * Math.PI / 180) * 200);
+
+                mCircleView.setCircleLocation(x, y);
+
+                if (currentPose == Pose.FIST) {
+                    if (currentStroke == null) {
+                        currentStroke = new Stroke();
+                    }
+                    currentStroke.addPoint(new PointF(x, y));
+                } else {
+                    if (currentStroke != null) {
+                        strokes.add(currentStroke);
+                        currentStroke = null;
+                    }
+                }
             }
         }
         // onPose() is called whenever a Myo provides a new pose.
         @Override
         public void onPose(Myo myo, long timestamp, Pose pose) {
+            // TODO: implement debouce on pose detection
+
             // Handle the cases of the Pose enumeration, and change the text of the text view
             // based on the pose we receive.
 
@@ -142,7 +163,7 @@ public class HelloWorldActivity extends Activity {
 
 //            mTimeTextView.setText(Long.toString(timestamp));
 
-            currentlyDrawing = (pose == Pose.FIST);
+            currentPose = pose;
 
             PebbleDictionary data = new PebbleDictionary();
 
@@ -175,12 +196,20 @@ public class HelloWorldActivity extends Activity {
                 case WAVE_IN:
                     mTextView.setText("Pose at wave in");
 
+                    if (!currentlyDrawing) {
+                        startDrawing();
+                    }
+
                     data.addInt8(11, (byte) 3);
                     PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
 
                     break;
                 case WAVE_OUT:
                     mTextView.setText("Pose at wave out");
+
+                    if (currentlyDrawing) {
+                        stopDrawing();
+                    }
 
                     data.addInt8(11, (byte) 2);
                     PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
@@ -202,7 +231,10 @@ public class HelloWorldActivity extends Activity {
     private TextView mTimeTextView;
     private ListView mListView;
     private CircleView mCircleView;
-    private LipiTKJNIInterface _lipitkInterface;
+    private LipiTKJNIInterface _recognizer;
+    private Stroke currentStroke;
+    private String[] character;
+    private ArrayList<Stroke> strokes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -258,8 +290,8 @@ public class HelloWorldActivity extends Activity {
         File externalFileDir = getApplicationContext().getExternalFilesDir(null);
         String path = externalFileDir.getPath();
         Log.d("JNI", "Path: " + path);
-        _lipitkInterface = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
-        _lipitkInterface.initialize();
+        _recognizer = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
+        _recognizer.initialize();
     }
     @Override
     protected void onResume() {
@@ -306,6 +338,9 @@ public class HelloWorldActivity extends Activity {
             case R.id.message:
                 onNewMessage(new Message(String.format("Test %d", System.currentTimeMillis())));
                 return true;
+            case R.id.startDraw:
+                startDrawing();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -337,6 +372,33 @@ public class HelloWorldActivity extends Activity {
         mListView.setAdapter(null);
 
         // TODO: go to next message in the queue
+    }
+
+    private void startDrawing() {
+        currentlyDrawing = true;
+        strokes = new ArrayList<Stroke>();
+    }
+
+    private void stopDrawing() {
+        currentlyDrawing = false;
+
+        Stroke[] strokesArray = new Stroke[strokes.size()];
+        for (int s = 0; s < strokes.size(); s++)
+            strokesArray[s] = strokes.get(s);
+
+        LipitkResult[] results = _recognizer.recognize(strokesArray);
+
+        for (LipitkResult result : results) {
+            Log.e("jni", "ShapeID = " + result.Id + " Confidence = " + result.Confidence);
+        }
+
+        String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
+        character=new String[results.length];
+        for(int i=0;i<character.length;i++){
+            character[i] = _recognizer.getSymbolName(results[i].Id, configFileDirectory);
+        }
+
+        Toast.makeText(this, character[0], Toast.LENGTH_SHORT).show();
     }
 }
 

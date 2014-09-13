@@ -11,4 +11,9 @@
        android:showAsAction="ifRoom"
        android:title="Message"
        />
+    <item
+        android:id="@+id/startDraw"
+        android:showAsAction="ifRoom"
+        android:title="Start Drawing"
+        />
 </menu>
