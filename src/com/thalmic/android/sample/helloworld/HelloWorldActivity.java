@@ -19,7 +19,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.getpebble.android.kit.PebbleKit;
-import com.getpebble.android.kit.util.PebbleDictionary;
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.Arm;
 import com.thalmic.myo.DeviceListener;
@@ -46,7 +45,15 @@ public class HelloWorldActivity extends Activity {
     private boolean currentlyViewingMessage = false;
 
     private TextView mTextView;
-    private float lastPitch;
+    private float lastScrollPitch;
+    private float roll;
+    private float pitch;
+    private float yaw;
+
+    private boolean currentlyDrawing;
+    private float lastDrawPitch;
+    private float lastDrawYaw;
+
     // Classes that inherit from AbstractDeviceListener can be used to receive events from Myo devices.
     // If you do not override an event, the default behavior is to do nothing.
     private DeviceListener mListener = new AbstractDeviceListener() {
@@ -90,9 +97,9 @@ public class HelloWorldActivity extends Activity {
         @Override
         public void onOrientationData(Myo myo, long timestamp, Quaternion rotation) {
             // Calculate Euler angles (roll, pitch, and yaw) from the quaternion.
-            float roll = (float) Math.toDegrees(Quaternion.roll(rotation));
-            float pitch = (float) Math.toDegrees(Quaternion.pitch(rotation));
-            float yaw = (float) Math.toDegrees(Quaternion.yaw(rotation));
+            roll = (float) Math.toDegrees(Quaternion.roll(rotation));
+            pitch = (float) Math.toDegrees(Quaternion.pitch(rotation));
+            yaw = (float) Math.toDegrees(Quaternion.yaw(rotation));
             // Adjust roll and pitch for the orientation of the Myo on the arm.
             if (mXDirection == XDirection.TOWARD_ELBOW) {
                 roll *= -1;
@@ -104,9 +111,16 @@ public class HelloWorldActivity extends Activity {
 //            mTextView.setRotationY(yaw);
 
             if (!currentlyViewingMessage) {
-                lastPitch = pitch;
+                lastScrollPitch = pitch;
             } else {
-                mListView.setItemChecked((int) ((pitch - lastPitch) / 5), true);
+                mListView.setItemChecked((int) ((pitch - lastScrollPitch) / 5), true);
+            }
+
+            if (!currentlyDrawing) {
+                lastDrawPitch = pitch;
+                lastDrawYaw = yaw;
+            } else {
+                mCircleView.setCircleLocation(150 + (int) ((yaw - lastDrawYaw) * -3), 150 + (int) ((pitch - lastDrawPitch) * 3));
             }
         }
         // onPose() is called whenever a Myo provides a new pose.
@@ -121,6 +135,8 @@ public class HelloWorldActivity extends Activity {
 //            PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
 
 //            mTimeTextView.setText(Long.toString(timestamp));
+
+            currentlyDrawing = (pose == Pose.FIST);
 
             switch (pose) {
                 case UNKNOWN:
@@ -169,6 +185,7 @@ public class HelloWorldActivity extends Activity {
     };
     private TextView mTimeTextView;
     private ListView mListView;
+    private CircleView mCircleView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -178,6 +195,7 @@ public class HelloWorldActivity extends Activity {
         mTimeTextView = (TextView) findViewById(R.id.timestamp);
         mListView = (ListView) findViewById(R.id.listView);
         mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        mCircleView = (CircleView) findViewById(R.id.circle_view);
         // First, we initialize the Hub singleton with an application identifier.
         Hub hub = Hub.getInstance();
         if (!hub.init(this, getPackageName())) {

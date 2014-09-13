@@ -13,6 +13,12 @@
         android:layout_height="wrap_content"
         tools:ignore="SpUsage"/>
 
+    <com.thalmic.android.sample.helloworld.CircleView
+        android:id="@+id/circle_view"
+        android:layout_width="300px"
+        android:layout_height="300px"
+        android:layout_gravity="center" />
+
     <TextView
         android:padding="10dp"
         android:layout_width="fill_parent"
@@ -23,7 +29,7 @@
 
     <ListView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:id="@+id/listView"
         android:layout_gravity="center_horizontal"
         tools:listitem="@android:layout/simple_list_item_1"/>
