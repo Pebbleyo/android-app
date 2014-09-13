@@ -168,17 +168,8 @@ public class HelloWorldActivity extends Activity {
         }
 
         public void onPoseHeld(Myo myo, long timestamp, Pose pose) {
-            // TODO: implement debouce on pose detection
-
             // Handle the cases of the Pose enumeration, and change the text of the text view
             // based on the pose we receive.
-
-//            PebbleDictionary data = new PebbleDictionary();
-////            data.addInt8(0, (byte) pose.ordinal());
-//            data.addString(0, "a");
-//            PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
-
-//            mTimeTextView.setText(Long.toString(timestamp));
 
             if (currentPose == pose) return;
             else currentPose = pose;
