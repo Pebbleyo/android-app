@@ -243,6 +243,7 @@ public class HelloWorldActivity extends Activity {
     private LipiTKJNIInterface _recognizer;
     private Stroke currentStroke;
     private ArrayList<Stroke> strokes;
+    private Pebble pebble;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -264,27 +265,14 @@ public class HelloWorldActivity extends Activity {
         // Next, register for DeviceListener callbacks.
         hub.addListener(mListener);
 
-        boolean connected = PebbleKit.isWatchConnected(getApplicationContext());
+        pebble = new Pebble(this);
+        boolean connected = pebble.isConnected();
         Log.i(getLocalClassName(), "Pebble is " + (connected ? "connected" : "not connected"));
 
         if (connected) {
-            PebbleKit.startAppOnPebble(getApplicationContext(), PEBBLE_APP_UUID);
+            pebble.startApp();
             Log.i(getLocalClassName(), "Starting app with UUID " + PEBBLE_APP_UUID.toString());
         }
-
-        PebbleKit.registerReceivedAckHandler(getApplicationContext(), new PebbleKit.PebbleAckReceiver(PEBBLE_APP_UUID) {
-            @Override
-            public void receiveAck(Context context, int transactionId) {
-                Log.i(getLocalClassName(), "Received ack for transaction " + transactionId);
-            }
-        });
-
-        PebbleKit.registerReceivedNackHandler(getApplicationContext(), new PebbleKit.PebbleNackReceiver(PEBBLE_APP_UUID) {
-            @Override
-            public void receiveNack(Context context, int transactionId) {
-                Log.i(getLocalClassName(), "Received nack for transaction " + transactionId);
-            }
-        });
 
         // Install required assets for LipiTk recognition
         AssetInstaller assetInstaller = new AssetInstaller(getApplicationContext(), "projects");
