@@ -233,7 +233,6 @@ public class HelloWorldActivity extends Activity {
     private CircleView mCircleView;
     private LipiTKJNIInterface _recognizer;
     private Stroke currentStroke;
-    private String[] character;
     private ArrayList<Stroke> strokes;
 
     @Override
@@ -382,23 +381,31 @@ public class HelloWorldActivity extends Activity {
     private void stopDrawing() {
         currentlyDrawing = false;
 
-        Stroke[] strokesArray = new Stroke[strokes.size()];
-        for (int s = 0; s < strokes.size(); s++)
-            strokesArray[s] = strokes.get(s);
+        String character;
 
-        LipitkResult[] results = _recognizer.recognize(strokesArray);
+        if (strokes.size() > 0) {
+            Stroke[] strokesArray = new Stroke[strokes.size()];
+            for (int s = 0; s < strokes.size(); s++)
+                strokesArray[s] = strokes.get(s);
 
-        for (LipitkResult result : results) {
-            Log.e("jni", "ShapeID = " + result.Id + " Confidence = " + result.Confidence);
+            LipitkResult[] results = _recognizer.recognize(strokesArray);
+
+            for (LipitkResult result : results) {
+                Log.e("jni", "ShapeID = " + result.Id + " Confidence = " + result.Confidence);
+            }
+
+            String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
+            //        character=new String[results.length];
+            //        for(int i=0;i<character.length;i++){
+            //            character[i] = _recognizer.getSymbolName(results[i].Id, configFileDirectory);
+            //        }
+
+            character = _recognizer.getSymbolName(results[0].Id, configFileDirectory);
+        } else {
+            character = " ";
         }
 
-        String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
-        character=new String[results.length];
-        for(int i=0;i<character.length;i++){
-            character[i] = _recognizer.getSymbolName(results[i].Id, configFileDirectory);
-        }
-
-        Toast.makeText(this, character[0], Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, character, Toast.LENGTH_SHORT).show();
     }
 }
 
