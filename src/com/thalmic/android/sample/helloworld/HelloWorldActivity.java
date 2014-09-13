@@ -18,6 +18,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.canvas.AssetInstaller;
+import com.canvas.LipiTKJNIInterface;
 import com.getpebble.android.kit.PebbleKit;
 import com.getpebble.android.kit.util.PebbleDictionary;
 import com.thalmic.myo.AbstractDeviceListener;
@@ -30,6 +32,8 @@ import com.thalmic.myo.Quaternion;
 import com.thalmic.myo.XDirection;
 import com.thalmic.myo.scanner.ScanActivity;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
@@ -198,6 +202,7 @@ public class HelloWorldActivity extends Activity {
     private TextView mTimeTextView;
     private ListView mListView;
     private CircleView mCircleView;
+    private LipiTKJNIInterface _lipitkInterface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -240,6 +245,21 @@ public class HelloWorldActivity extends Activity {
                 Log.i(getLocalClassName(), "Received nack for transaction " + transactionId);
             }
         });
+
+        // Install required assets for LipiTk recognition
+        AssetInstaller assetInstaller = new AssetInstaller(getApplicationContext(), "projects");
+        try {
+            assetInstaller.execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Initialize lipitk
+        File externalFileDir = getApplicationContext().getExternalFilesDir(null);
+        String path = externalFileDir.getPath();
+        Log.d("JNI", "Path: " + path);
+        _lipitkInterface = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
+        _lipitkInterface.initialize();
     }
     @Override
     protected void onResume() {
