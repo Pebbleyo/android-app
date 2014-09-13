@@ -1,25 +1,31 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.thalmic.android.sample.helloworld.HelloWorldActivity"
-    tools:ignore="MergeRootFrame">
+    android:orientation="vertical" >
 
     <TextView
         android:id="@+id/text"
         android:text="@string/hello_world"
-        android:textSize="50dp"
+        android:textSize="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         tools:ignore="SpUsage"/>
 
     <TextView
+        android:padding="10dp"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:id="@+id/timestamp"
-        android:textSize="10dp"
+        android:textSize="15dp"
         android:text="Timestamp" />
 
-</FrameLayout>
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/listView"
+        android:layout_gravity="center_horizontal"
+        tools:listitem="@android:layout/simple_list_item_1"/>
+
+</LinearLayout>

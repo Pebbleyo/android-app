@@ -6,4 +6,9 @@
         android:showAsAction="ifRoom"
         android:title="@string/scan"
         />
+    <item
+       android:id="@+id/message"
+       android:showAsAction="ifRoom"
+       android:title="Message"
+       />
 </menu>

@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.getpebble.android.kit.PebbleKit;
@@ -28,6 +30,8 @@ import com.thalmic.myo.Quaternion;
 import com.thalmic.myo.XDirection;
 import com.thalmic.myo.scanner.ScanActivity;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.UUID;
 
 public class HelloWorldActivity extends Activity {
@@ -37,7 +41,12 @@ public class HelloWorldActivity extends Activity {
 
     private final static UUID PEBBLE_APP_UUID = UUID.fromString("6e048a5d-61c8-470d-8319-ac3be4188f84");
 
+    private Queue<Message> messageQueue = new LinkedList<Message>();
+    private Message currentMessage;
+    private boolean currentlyViewingMessage = false;
+
     private TextView mTextView;
+    private float lastPitch;
     // Classes that inherit from AbstractDeviceListener can be used to receive events from Myo devices.
     // If you do not override an event, the default behavior is to do nothing.
     private DeviceListener mListener = new AbstractDeviceListener() {
@@ -93,6 +102,12 @@ public class HelloWorldActivity extends Activity {
 //            mTextView.setRotation(roll);
 //            mTextView.setRotationX(pitch);
 //            mTextView.setRotationY(yaw);
+
+            if (!currentlyViewingMessage) {
+                lastPitch = pitch;
+            } else {
+                mListView.setItemChecked((int) ((pitch - lastPitch) / 5), true);
+            }
         }
         // onPose() is called whenever a Myo provides a new pose.
         @Override
@@ -105,11 +120,10 @@ public class HelloWorldActivity extends Activity {
 //            data.addString(0, "a");
 //            PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
 
-            mTimeTextView.setText(Long.toString(timestamp));
+//            mTimeTextView.setText(Long.toString(timestamp));
 
             switch (pose) {
                 case UNKNOWN:
-                    mTextView.setTextColor(Color.CYAN);
                     mTextView.setText("Pose unknown");
                     break;
                 case REST:
@@ -122,33 +136,39 @@ public class HelloWorldActivity extends Activity {
                             restTextId = R.string.arm_right;
                             break;
                     }
-                    mTextView.setTextColor(Color.CYAN);
                     mTextView.setText("Pose at rest");
                     break;
                 case FIST:
-                    mTextView.setTextColor(Color.CYAN);
                     mTextView.setText("Pose at fist");
+
+                    if (!currentlyViewingMessage && currentMessage != null) {
+                        displayMessageResponses(currentMessage);
+                    }
+
+
+
                     break;
                 case WAVE_IN:
-                    mTextView.setTextColor(Color.CYAN);
                     mTextView.setText("Pose at wave in");
                     break;
                 case WAVE_OUT:
-                    mTextView.setTextColor(Color.CYAN);
                     mTextView.setText("Pose at wave out");
                     break;
                 case FINGERS_SPREAD:
-                    mTextView.setTextColor(Color.CYAN);
                     mTextView.setText("Pose at fingers spread");
+
+                    if (currentlyViewingMessage) {
+                        clearMessageResponses();
+                    }
                     break;
                 case THUMB_TO_PINKY:
-                    mTextView.setTextColor(Color.CYAN);
                     mTextView.setText("Pose at thumb to pinky");
                     break;
             }
         }
     };
     private TextView mTimeTextView;
+    private ListView mListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,6 +176,8 @@ public class HelloWorldActivity extends Activity {
         setContentView(R.layout.activity_hello_world);
         mTextView = (TextView) findViewById(R.id.text);
         mTimeTextView = (TextView) findViewById(R.id.timestamp);
+        mListView = (ListView) findViewById(R.id.listView);
+        mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         // First, we initialize the Hub singleton with an application identifier.
         Hub hub = Hub.getInstance();
         if (!hub.init(this, getPackageName())) {
@@ -227,9 +249,13 @@ public class HelloWorldActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (R.id.action_scan == id) {
-            onScanActionSelected();
-            return true;
+        switch (id) {
+            case R.id.action_scan:
+                onScanActionSelected();
+                return true;
+            case R.id.message:
+                onNewMessage(new Message(String.format("Test %d", System.currentTimeMillis())));
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -237,6 +263,30 @@ public class HelloWorldActivity extends Activity {
         // Launch the ScanActivity to scan for Myos to connect to.
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
+    }
+
+    private void onNewMessage(Message message) {
+        messageQueue.add(message);
+        if (!currentlyViewingMessage) {
+            currentMessage = messageQueue.poll();
+            display(currentMessage);
+        }
+    }
+
+    private void display(Message message) {
+        mTimeTextView.setText(message.toString());
+    }
+
+    private void displayMessageResponses(Message message) {
+        currentlyViewingMessage = true;
+        mListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, message.getResponses()));
+    }
+
+    private void clearMessageResponses() {
+        currentlyViewingMessage = false;
+        mListView.setAdapter(null);
+
+        // TODO: go to next message in the queue
     }
 }
 
