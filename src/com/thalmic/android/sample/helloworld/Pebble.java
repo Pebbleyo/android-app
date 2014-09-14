@@ -67,4 +67,8 @@ public class Pebble {
     private void send(PebbleDictionary data) {
         PebbleKit.sendDataToPebble(mContext, PEBBLE_APP_UUID, data);
     }
+
+    public void closeApp() {
+        PebbleKit.closeAppOnPebble(mContext, PEBBLE_APP_UUID);
+    }
 }

@@ -429,6 +429,7 @@ public class HelloWorldActivity extends Activity {
 
     private void display(Message message) {
         mMessageView.setText(message.toString());
+        pebble.startApp();
         pebble.displayMessage(message);
     }
 
@@ -446,7 +447,7 @@ public class HelloWorldActivity extends Activity {
 
     private void clearMessageResponses() {
         mListView.setAdapter(null);
-
+        pebble.closeApp();
         // TODO: go to next message in the queue
     }
 
