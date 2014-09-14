@@ -6,6 +6,7 @@
 package com.thalmic.android.sample.helloworld;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -19,6 +20,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.getpebble.android.kit.PebbleKit;
+import com.getpebble.android.kit.util.PebbleDictionary;
 import com.thalmic.myo.*;
 import com.thalmic.myo.scanner.ScanActivity;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -124,7 +127,7 @@ public class HelloWorldActivity extends Activity {
                     break;
                 case STATE_MESSAGE_RECEIVED_UNREAD:
 //                    if (roll < -10 && roll > -50 && pitch < 0) {
-                        setState(STATE_MESSAGE_RECEIVED_READING);
+//                        setState(STATE_MESSAGE_RECEIVED_READING);
 //                    }
                     break;
                 case STATE_MESSAGE_RECEIVED_READING:
@@ -360,6 +363,21 @@ public class HelloWorldActivity extends Activity {
         } catch (Exception e) {
             Log.e("FbChat", "exception", e);
         }
+
+
+        PebbleKit.registerReceivedDataHandler(this, new PebbleKit.PebbleDataReceiver(Pebble.PEBBLE_APP_UUID) {
+            @Override
+            public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
+//                Log.i("Pebble", "Received value=" + data.getInteger(11) + " for key: 11");
+
+                if (data.getInteger(11) != null && state == STATE_MESSAGE_RECEIVED_UNREAD) {
+                    vibrate();
+                    setState(STATE_MESSAGE_RECEIVED_READING);
+                }
+
+                PebbleKit.sendAckToPebble(getApplicationContext(), transactionId);
+            }
+        });
     }
     @Override
     protected void onResume() {
