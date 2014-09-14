@@ -254,7 +254,7 @@ public class HelloWorldActivity extends Activity {
                 case FINGERS_SPREAD:
                     mTextView.setText("Pose at fingers spread");
 
-                    vibrate();
+                    if (state != STATE_READY) vibrate();
 
                     switch (state) {
                         case STATE_MESSAGE_RECEIVED_READING:
