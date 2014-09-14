@@ -27,6 +27,14 @@
         android:textSize="15dp"
         android:text="Timestamp" />
 
+    <TextView
+        android:padding="10dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/messageView"
+        android:textSize="20dp"
+        android:text="Message" />
+
     <ListView
         android:layout_width="match_parent"
         android:layout_height="fill_parent"

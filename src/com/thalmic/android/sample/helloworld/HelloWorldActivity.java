@@ -122,19 +122,22 @@ public class HelloWorldActivity extends Activity {
                 pitch *= -1;
             }
 
+            mTimeTextView.setText(String.format("R %.3f | P %.3f | Y %.3f", roll, pitch, yaw));
+
             switch (state) {
                 case STATE_READY:
                     break;
                 case STATE_MESSAGE_RECEIVED_UNREAD:
-                    if (roll < 10 && roll > -10 && pitch > 0) {
+//                    if (roll < -10 && roll > -50 && pitch < 0) {
                         setState(STATE_MESSAGE_RECEIVED_READING);
-                    }
+//                    }
                     break;
                 case STATE_MESSAGE_RECEIVED_READING:
                     break;
                 case STATE_RESPONDING:
                     if (baseScrollPitch == null) baseScrollPitch = pitch;
-                    mListView.setItemChecked((int) ((pitch - baseScrollPitch) / 5), true);
+                    currentIndex = (int) ((pitch - baseScrollPitch) / 5);
+                    mListView.setItemChecked(currentIndex, true);
                     break;
                 case STATE_COMPOSING:
                     if (baseDrawPitch == null) baseDrawPitch = pitch;
@@ -247,6 +250,7 @@ public class HelloWorldActivity extends Activity {
         }
     };
     private Composition composition;
+    private TextView mMessageView;
 
     private void compositionNextOrFinish() {
         String prevChar = composition.peek();
@@ -263,9 +267,12 @@ public class HelloWorldActivity extends Activity {
         switch (newState) {
             case STATE_READY:
                 clearMessageResponses();
-                composition.finish();
+                if (composition != null) composition.finish();
                 currentMessage = null;
                 currentIndex = -1;
+                baseScrollPitch = null;
+                baseDrawPitch = null;
+                baseDrawYaw = null;
                 break;
             case STATE_RESPONDING:
                 displayMessageResponses(currentMessage);
@@ -277,6 +284,9 @@ public class HelloWorldActivity extends Activity {
         }
 
         state = newState;
+
+        Log.i(getLocalClassName(), "New state : " + Integer.toString(newState));
+
         return true;
     }
 
@@ -291,6 +301,7 @@ public class HelloWorldActivity extends Activity {
         setContentView(R.layout.activity_hello_world);
         mTextView = (TextView) findViewById(R.id.text);
         mTimeTextView = (TextView) findViewById(R.id.timestamp);
+        mMessageView = (TextView) findViewById(R.id.messageView);
         mListView = (ListView) findViewById(R.id.listView);
         mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         mCircleView = (CircleView) findViewById(R.id.circle_view);
@@ -378,11 +389,12 @@ public class HelloWorldActivity extends Activity {
         if (state == STATE_READY || state == STATE_MESSAGE_RECEIVED_UNREAD) {
             currentMessage = messageQueue.poll();
             display(currentMessage);
+            setState(STATE_MESSAGE_RECEIVED_UNREAD);
         }
     }
 
     private void display(Message message) {
-        mTimeTextView.setText(message.toString());
+        mMessageView.setText(message.toString());
     }
 
     private void send(Message message) {
