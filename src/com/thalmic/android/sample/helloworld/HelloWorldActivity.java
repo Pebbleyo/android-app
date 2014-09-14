@@ -253,7 +253,7 @@ public class HelloWorldActivity extends Activity {
     private void compositionNextOrFinish() {
         String prevChar = composition.peek();
         if (prevChar != null && prevChar.equals(" ")) {
-            send(currentMessage.createMessageResponse(composition.finish()));
+            if (currentMessage != null) send(currentMessage.createMessageResponse(composition.finish()));
         } else {
             composition.next();
         }
