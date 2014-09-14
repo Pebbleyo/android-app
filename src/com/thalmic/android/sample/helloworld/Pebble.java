@@ -9,7 +9,9 @@ import java.util.UUID;
 
 public class Pebble {
     public final static UUID PEBBLE_APP_UUID = UUID.fromString("1d139f51-14b0-4a9e-882e-91df056ff7fe");
-    private static final int KEY_DISPLAY_MESSAGE = 6;
+    private static final int KEY_SET_INDEX = 6;
+    private static final int KEY_DISPLAY_MESSAGE = 7;
+    private static final int KEY_SHOW_LIST = 8;
     private final Context mContext;
 
     public Pebble(Context context) {
@@ -47,9 +49,19 @@ public class Pebble {
     public void displayResponses(MessageResponses messageResponses) {
         PebbleDictionary data = new PebbleDictionary();
         for (int i=0; i<messageResponses.size(); i++) {
-            data.addString(i, messageResponses.get(i).toString());
+            data.addString(i+1, messageResponses.get(i).toString());
             send(data);
         }
+
+        PebbleDictionary data2 = new PebbleDictionary();
+        data.addInt8(KEY_SHOW_LIST, (byte) 42);
+        send(data);
+    }
+
+    public void setIndex(int index) {
+        PebbleDictionary data = new PebbleDictionary();
+        data.addUint16(KEY_SET_INDEX, (short) index);
+        send(data);
     }
 
     private void send(PebbleDictionary data) {

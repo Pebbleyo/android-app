@@ -35,6 +35,8 @@ public class HelloWorldActivity extends Activity {
     private static final int STATE_COMPOSING = 4;
     private int state;
 
+    private static final int MAX_LIST_ITEMS = 5;
+
     private static final int REQUEST_ENABLE_BT = 1;
 
     private Queue<Message> messageQueue = new LinkedList<Message>();
@@ -121,8 +123,13 @@ public class HelloWorldActivity extends Activity {
                     break;
                 case STATE_RESPONDING:
                     if (baseScrollPitch == null) baseScrollPitch = pitch;
-                    currentIndex = (int) ((pitch - baseScrollPitch) / 5);
+
+                    currentIndex = (int) ((pitch - baseScrollPitch) / MAX_LIST_ITEMS);
+                    if (currentIndex < 0) currentIndex = 0;
+                    if (currentIndex >= MAX_LIST_ITEMS) currentIndex = MAX_LIST_ITEMS-1;
+
                     mListView.setItemChecked(currentIndex, true);
+                    pebble.setIndex(currentIndex);
                     break;
                 case STATE_COMPOSING:
                     if (baseDrawPitch == null) baseDrawPitch = pitch;
@@ -378,6 +385,7 @@ public class HelloWorldActivity extends Activity {
 
     private void display(Message message) {
         mMessageView.setText(message.toString());
+        pebble.displayMessage(message);
     }
 
     private void send(Message message) {
@@ -388,6 +396,7 @@ public class HelloWorldActivity extends Activity {
     private void displayMessageResponses(Message message) {
         currentResponses = message.getResponses();
         mListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, currentResponses.getStringList()));
+        pebble.displayResponses(currentResponses);
     }
 
     private void clearMessageResponses() {
