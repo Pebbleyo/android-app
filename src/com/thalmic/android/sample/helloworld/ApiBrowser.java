@@ -11,6 +11,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
 
 public class ApiBrowser {
     private final Context mContext;
@@ -30,16 +32,25 @@ public class ApiBrowser {
     }
 
     private String getApiByIndex(int index) {
-        return (String) apis.values().toArray()[index];
+        Object[] array = apis.values().toArray();
+        if (index < array.length) {
+            return (String) array[index];
+        } else {
+            return null;
+        }
     }
 
-    public void launch() {
+    public Set<String> launch() {
         volleyQueue.getRequestQueue().cancelAll(TAG);
 
         PebbleDictionary data = new PebbleDictionary();
         int i=1;
         for (String key : apis.keySet()) {
             data.addString(i, key);
+            i++;
+        }
+        while (i<HelloWorldActivity.MAX_LIST_ITEMS+1) {
+            data.addString(i, " ");
             i++;
         }
         mPebble.send(data);
@@ -52,10 +63,14 @@ public class ApiBrowser {
                 mPebble.send(data2);
             }
         }, 500);
+
+        return apis.keySet();
     }
 
-    public void select(int index) {
+    public boolean select(int index) {
         String url = getApiByIndex(index);
+
+        if (url == null) return false;
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
                 (Request.Method.GET, url, null, new Response.Listener() {
@@ -82,5 +97,6 @@ public class ApiBrowser {
 
         volleyQueue.addToRequestQueue(jsObjRequest);
 
+        return true;
     }
 }

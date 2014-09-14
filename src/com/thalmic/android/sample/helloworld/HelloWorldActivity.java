@@ -29,9 +29,7 @@ import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.UUID;
+import java.util.*;
 
 public class HelloWorldActivity extends Activity {
     // This code will be returned in onActivityResult() when the enable Bluetooth activity exits.
@@ -231,8 +229,9 @@ public class HelloWorldActivity extends Activity {
                         vibrate();
                     } else if (state == STATE_API_BROWSER_LIST) {
                         vibrate();
-                        apiBrowser.select(currentIndex);
-                        setState(STATE_API_BROWSER_RESULTS);
+                        if (apiBrowser.select(currentIndex)) {
+                            setState(STATE_API_BROWSER_RESULTS);
+                        }
                     }
 
                     break;
@@ -269,8 +268,7 @@ public class HelloWorldActivity extends Activity {
 
                     switch (state) {
                         case STATE_API_BROWSER_RESULTS:
-                            apiBrowser.launch();
-                            setState(STATE_API_BROWSER_LIST);
+                            launchApiBrowser();
                             break;
                         case STATE_API_BROWSER_LIST:
                         case STATE_MESSAGE_RECEIVED_READING:
@@ -390,8 +388,7 @@ public class HelloWorldActivity extends Activity {
                         vibrate();
                         setState(STATE_MESSAGE_RECEIVED_READING);
                     } else if (state == STATE_READY) {
-                        apiBrowser.launch();
-                        setState(STATE_API_BROWSER_LIST);
+                        launchApiBrowser();
                     }
                 }
 
@@ -497,5 +494,13 @@ public class HelloWorldActivity extends Activity {
 
     private void vibrate() {
         mMyo.vibrate(Myo.VibrationType.SHORT);
+    }
+
+    private void launchApiBrowser() {
+        Set<String> apiKeys = apiBrowser.launch();
+        List<String> apiKeysList = new ArrayList<String>();
+        apiKeysList.addAll(apiKeys);
+        setState(STATE_API_BROWSER_LIST);
+        mListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, apiKeysList));
     }
 }

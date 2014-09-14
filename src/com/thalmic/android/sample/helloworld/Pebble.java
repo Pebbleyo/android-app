@@ -13,6 +13,7 @@ public class Pebble {
     private static final int KEY_SET_INDEX = 6;
     private static final int KEY_DISPLAY_MESSAGE = 7;
     public static final int KEY_SHOW_LIST = 8;
+    public static final int KEY_SHOW_WELCOME = 9;
     private final Context mContext;
 
     public Pebble(Context context) {
