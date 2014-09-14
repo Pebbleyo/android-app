@@ -1,12 +1,11 @@
 package com.thalmic.android.sample.helloworld;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Message {
-    private final String mText;
+    protected final String mText;
+    protected final String mFrom;
 
-    public Message(String text) {
+    public Message(String from, String text) {
+        mFrom = from;
         mText = text;
     }
 
@@ -18,9 +17,13 @@ public class Message {
         MessageResponses list = new MessageResponses();
 
         for (int i=0; i<5; i++) {
-            list.add(new Message(Double.toString(Math.random())));
+            list.add(createMessageResponse(Double.toString(Math.random())));
         }
 
         return list;
+    }
+
+    public MessageResponse createMessageResponse(String text) {
+        return new MessageResponse(mFrom, text);
     }
 }

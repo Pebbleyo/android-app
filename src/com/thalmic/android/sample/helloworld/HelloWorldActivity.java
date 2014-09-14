@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,6 +21,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.thalmic.myo.*;
 import com.thalmic.myo.scanner.ScanActivity;
+import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.SASLAuthentication;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -243,11 +248,12 @@ public class HelloWorldActivity extends Activity {
     };
     private Composition composition;
     private TextView mMessageView;
+    public FbChat fbChat;
 
     private void compositionNextOrFinish() {
         String prevChar = composition.peek();
         if (prevChar != null && prevChar.equals(" ")) {
-            send(new Message(composition.finish()));
+            send(currentMessage.createMessageResponse(composition.finish()));
         } else {
             composition.next();
         }
@@ -318,6 +324,20 @@ public class HelloWorldActivity extends Activity {
         }
 
         Composition.init(this);
+
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
+        try {
+            fbChat = new FbChat(this, new FbChat.FbMessageHandler() {
+                @Override
+                public void onMessage(Message message) {
+                    onNewMessage(message);
+                }
+        });
+        } catch (Exception e) {
+            Log.e("FbChat", "exception", e);
+        }
     }
     @Override
     protected void onResume() {
@@ -362,7 +382,7 @@ public class HelloWorldActivity extends Activity {
                 onScanActionSelected();
                 return true;
             case R.id.message:
-                onNewMessage(new Message(String.format("Test %d", System.currentTimeMillis())));
+                onNewMessage(new Message("Someone", String.format("Test %d", System.currentTimeMillis())));
                 return true;
             case R.id.startDraw:
                 setState(STATE_COMPOSING);
