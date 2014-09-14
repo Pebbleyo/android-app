@@ -329,7 +329,7 @@ public class HelloWorldActivity extends Activity {
         StrictMode.setThreadPolicy(policy);
 
         try {
-            fbChat = new FbChat(this, new FbChat.FbMessageHandler() {
+            FbChat.init(this, new FbChat.FbMessageHandler() {
                 @Override
                 public void onMessage(Message message) {
                     onNewMessage(message);
@@ -410,8 +410,9 @@ public class HelloWorldActivity extends Activity {
         pebble.displayMessage(message);
     }
 
-    private void send(Message message) {
+    private void send(MessageResponse message) {
         Toast.makeText(this, message.toString(), Toast.LENGTH_SHORT).show();
+        message.send();
         setState(STATE_READY);
     }
 

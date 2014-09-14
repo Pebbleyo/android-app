@@ -12,6 +12,6 @@ public class MessageResponse extends Message {
     }
 
     public boolean send() {
-        return true;
+        return FbChat.send(mFrom, mText);
     }
 }

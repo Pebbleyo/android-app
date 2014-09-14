@@ -17,7 +17,9 @@ import java.util.Collection;
 public class FbChat {
     private static final String TAG = "FbChat";
 
-    public FbChat(final Activity activity, final FbMessageHandler handler) throws XMPPException {
+    static XMPPConnection xmpp;
+
+    public static void init(final Activity activity, final FbMessageHandler handler) throws XMPPException {
 
         ConnectionConfiguration config = new ConnectionConfiguration("chat.facebook.com", 5222);
         config.setSASLAuthenticationEnabled(true);
@@ -34,7 +36,7 @@ public class FbChat {
 //        } catch (GeneralSecurityException e) {
 //            Log.w("TAG", "Unable to use MemorizingTrustManager", e);
 //        }
-        XMPPConnection xmpp = new XMPPConnection(config);
+        xmpp = new XMPPConnection(config);
         try {
             xmpp.connect();
             xmpp.login("100005010494816", "password1"); // Here you have to used only facebookusername from facebookusername@chat.facebook.com
@@ -71,6 +73,13 @@ public class FbChat {
             xmpp.disconnect();
             e.printStackTrace();
         }
+    }
+
+    public static boolean send(String to, String body) {
+        Message msg = new Message(to);
+        msg.setBody(body);
+        xmpp.sendPacket(msg);
+        return true;
     }
 
     public interface FbMessageHandler {
