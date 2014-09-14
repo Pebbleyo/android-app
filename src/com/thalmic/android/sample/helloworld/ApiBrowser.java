@@ -29,6 +29,10 @@ public class ApiBrowser {
         volleyQueue = VolleyQueue.getInstance(context);
 
         apis.put("Top Movies", "http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?apikey=gggx6ge2d2gn9baf9kdgh9cw&limit=5");
+        apis.put("Top Movies 2", "http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?apikey=gggx6ge2d2gn9baf9kdgh9cw&limit=5");
+        apis.put("Top Movies 3", "http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?apikey=gggx6ge2d2gn9baf9kdgh9cw&limit=5");
+        apis.put("Top Movies 4", "http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?apikey=gggx6ge2d2gn9baf9kdgh9cw&limit=5");
+        apis.put("Top Movies 5", "http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?apikey=gggx6ge2d2gn9baf9kdgh9cw&limit=5");
     }
 
     private String getApiByIndex(int index) {
@@ -47,10 +51,6 @@ public class ApiBrowser {
         int i=1;
         for (String key : apis.keySet()) {
             data.addString(i, key);
-            i++;
-        }
-        while (i<HelloWorldActivity.MAX_LIST_ITEMS+1) {
-            data.addString(i, " ");
             i++;
         }
         mPebble.send(data);

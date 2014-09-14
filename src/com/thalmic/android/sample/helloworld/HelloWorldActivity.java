@@ -301,7 +301,7 @@ public class HelloWorldActivity extends Activity {
                 if (composition != null) composition.finish();
                 clearMessageResponses();
                 currentMessage = null;
-                currentIndex = -1;
+                currentIndex = 0;
                 baseScrollPitch = null;
                 baseDrawPitch = null;
                 baseDrawYaw = null;
