@@ -16,9 +16,10 @@ public class Message {
     public MessageResponses getResponses() {
         MessageResponses list = new MessageResponses();
 
-        for (int i=0; i<5; i++) {
+        for (int i=0; i<HelloWorldActivity.MAX_LIST_ITEMS - 1; i++) {
             list.add(createMessageResponse(Double.toString(Math.random())));
         }
+        list.add(createMessageResponse("Compose..."));
 
         return list;
     }

@@ -40,7 +40,7 @@ public class HelloWorldActivity extends Activity {
     private static final int STATE_COMPOSING = 4;
     private int state;
 
-    private static final int MAX_LIST_ITEMS = 5;
+    public static final int MAX_LIST_ITEMS = 5;
 
     private static final int REQUEST_ENABLE_BT = 1;
 
@@ -203,7 +203,11 @@ public class HelloWorldActivity extends Activity {
                     if (state == STATE_MESSAGE_RECEIVED_READING) {
                         setState(STATE_RESPONDING);
                     } else if (state == STATE_RESPONDING) {
-                        send(currentResponses.get(currentIndex));
+                        if (currentIndex != MAX_LIST_ITEMS - 1) {
+                            send(currentResponses.get(currentIndex));
+                        } else {
+                            setState(STATE_COMPOSING);
+                        }
                     }
 
                     break;
@@ -334,7 +338,7 @@ public class HelloWorldActivity extends Activity {
                 public void onMessage(Message message) {
                     onNewMessage(message);
                 }
-        });
+            });
         } catch (Exception e) {
             Log.e("FbChat", "exception", e);
         }
