@@ -18,22 +18,22 @@ public class ApiBrowser {
 
     private final String TAG = "ApiBrowser";
 
-    private LinkedHashMap<String, String> apis;
+    private LinkedHashMap<String, String> apis = new LinkedHashMap<String, String>();
 
     public ApiBrowser(Context context, Pebble pebble) {
         mContext = context;
         mPebble = pebble;
-        volleyQueue = VolleyQueue.getInstance();
+        volleyQueue = VolleyQueue.getInstance(context);
 
         apis.put("Top Movies", "http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?apikey=gggx6ge2d2gn9baf9kdgh9cw&limit=5");
     }
 
-    private String getApiByIndex(int index){
+    private String getApiByIndex(int index) {
         return (String) apis.values().toArray()[index];
     }
 
     public void launch() {
-        volleyQueue.cancelPendingRequests(TAG);
+        volleyQueue.getRequestQueue().cancelAll(TAG);
 
         PebbleDictionary data = new PebbleDictionary();
         int i=1;
