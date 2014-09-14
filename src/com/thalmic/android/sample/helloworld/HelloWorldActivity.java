@@ -149,7 +149,7 @@ public class HelloWorldActivity extends Activity {
 
                     mCircleView.setCircleLocation(x, y);
 
-                    if (currentPose == Pose.FIST) {
+                    if (currentPose == Pose.FIST || currentPose == Pose.THUMB_TO_PINKY) {
                         composition.addPoint(x, y);
                     } else {
                         composition.endStroke();
