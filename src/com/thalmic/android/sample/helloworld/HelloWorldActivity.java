@@ -120,7 +120,7 @@ public class HelloWorldActivity extends Activity {
                 pitch *= -1;
             }
 
-            mTimeTextView.setText(String.format("R %.3f | P %.3f | Y %.3f", roll, pitch, yaw));
+            mTimeTextView.setText(String.format("R %.3f | P %.3f | Y %.3f | State: %d", roll, pitch, yaw, state));
 
             switch (state) {
                 case STATE_READY:
@@ -270,10 +270,7 @@ public class HelloWorldActivity extends Activity {
                         case STATE_API_BROWSER_RESULTS:
                             launchApiBrowser();
                             break;
-                        case STATE_API_BROWSER_LIST:
-                        case STATE_MESSAGE_RECEIVED_READING:
-                        case STATE_COMPOSING:
-                        case STATE_RESPONDING:
+                        default:
                             setState(STATE_READY);
                             break;
                     }
@@ -301,8 +298,8 @@ public class HelloWorldActivity extends Activity {
 
         switch (newState) {
             case STATE_READY:
-                clearMessageResponses();
                 if (composition != null) composition.finish();
+                clearMessageResponses();
                 currentMessage = null;
                 currentIndex = -1;
                 baseScrollPitch = null;
@@ -488,7 +485,7 @@ public class HelloWorldActivity extends Activity {
 
     private void clearMessageResponses() {
         mListView.setAdapter(null);
-        pebble.closeApp();
+        pebble.welcomeScreen();
         // TODO: go to next message in the queue
     }
 

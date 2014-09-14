@@ -75,7 +75,13 @@ public class Pebble {
         PebbleKit.sendDataToPebble(mContext, PEBBLE_APP_UUID, data);
     }
 
-    public void closeApp() {
-        PebbleKit.closeAppOnPebble(mContext, PEBBLE_APP_UUID);
+//    public void closeApp() {
+//        PebbleKit.closeAppOnPebble(mContext, PEBBLE_APP_UUID);
+//    }
+
+    public void welcomeScreen() {
+        PebbleDictionary data = new PebbleDictionary();
+        data.addInt8(KEY_SHOW_WELCOME, (byte) 42);
+        send(data);
     }
 }
