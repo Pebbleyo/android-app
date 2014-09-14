@@ -139,8 +139,8 @@ public class HelloWorldActivity extends Activity {
                     if (baseDrawPitch == null) baseDrawPitch = pitch;
                     if (baseDrawYaw == null) baseDrawYaw = yaw;
 
-                    int x = 150 - (int) (Math.sin((yaw - baseDrawYaw)     * Math.PI / 180) * 200);
-                    int y = 150 + (int) (Math.sin((pitch - baseDrawPitch) * Math.PI / 180) * 200);
+                    int x = 150 - (int) (((yaw - baseDrawYaw)     / 180) * 200);
+                    int y = 150 + (int) (((pitch - baseDrawPitch)  / 180) * 200);
 
                     mCircleView.setCircleLocation(x, y);
 
@@ -192,7 +192,8 @@ public class HelloWorldActivity extends Activity {
                     mTextView.setText("Pose at rest");
                     break;
                 case FIST:
-                    mTextView.setText("Pose at fist");
+                case THUMB_TO_PINKY:
+                    mTextView.setText("Pose at fist / thumb to pinky");
 
                     if (state == STATE_MESSAGE_RECEIVED_READING) {
                         setState(STATE_RESPONDING);
@@ -236,9 +237,6 @@ public class HelloWorldActivity extends Activity {
                             break;
                     }
 
-                    break;
-                case THUMB_TO_PINKY:
-                    mTextView.setText("Pose at thumb to pinky");
                     break;
             }
         }
