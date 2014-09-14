@@ -70,7 +70,7 @@ public class Pebble {
         send(data);
     }
 
-    private void send(PebbleDictionary data) {
+    public void send(PebbleDictionary data) {
         PebbleKit.sendDataToPebble(mContext, PEBBLE_APP_UUID, data);
     }
 

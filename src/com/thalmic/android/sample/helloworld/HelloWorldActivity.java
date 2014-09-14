@@ -41,6 +41,8 @@ public class HelloWorldActivity extends Activity {
     private static final int STATE_MESSAGE_RECEIVED_READING = 2;
     private static final int STATE_RESPONDING = 3;
     private static final int STATE_COMPOSING = 4;
+    private static final int STATE_API_BROWSER_LIST = 5;
+    private static final int STATE_API_BROWSER_RESULTS = 6;
     private int state;
 
     public static final int MAX_LIST_ITEMS = 5;
@@ -133,6 +135,8 @@ public class HelloWorldActivity extends Activity {
                 case STATE_MESSAGE_RECEIVED_READING:
                     break;
                 case STATE_RESPONDING:
+                case STATE_API_BROWSER_LIST:
+                case STATE_API_BROWSER_RESULTS:
                     if (baseScrollPitch == null) baseScrollPitch = pitch;
 
                     int newIndex = (int) ((pitch - baseScrollPitch) / MAX_LIST_ITEMS);
@@ -225,6 +229,10 @@ public class HelloWorldActivity extends Activity {
                         }
                     } else if (state == STATE_COMPOSING) {
                         vibrate();
+                    } else if (state == STATE_API_BROWSER_LIST) {
+                        vibrate();
+                        apiBrowser.select(currentIndex);
+                        setState(STATE_API_BROWSER_RESULTS);
                     }
 
                     break;
@@ -260,6 +268,11 @@ public class HelloWorldActivity extends Activity {
                     if (state != STATE_READY) vibrate();
 
                     switch (state) {
+                        case STATE_API_BROWSER_RESULTS:
+                            apiBrowser.launch();
+                            setState(STATE_API_BROWSER_LIST);
+                            break;
+                        case STATE_API_BROWSER_LIST:
                         case STATE_MESSAGE_RECEIVED_READING:
                         case STATE_COMPOSING:
                         case STATE_RESPONDING:
@@ -274,6 +287,7 @@ public class HelloWorldActivity extends Activity {
     private Composition composition;
     private TextView mMessageView;
     public FbChat fbChat;
+    private ApiBrowser apiBrowser;
 
     private void compositionNextOrFinish() {
         String prevChar = composition.peek();
@@ -364,15 +378,20 @@ public class HelloWorldActivity extends Activity {
             Log.e("FbChat", "exception", e);
         }
 
+        apiBrowser = new ApiBrowser(this, pebble);
 
         PebbleKit.registerReceivedDataHandler(this, new PebbleKit.PebbleDataReceiver(Pebble.PEBBLE_APP_UUID) {
             @Override
             public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
 //                Log.i("Pebble", "Received value=" + data.getInteger(11) + " for key: 11");
 
-                if (data.getInteger(11) != null && state == STATE_MESSAGE_RECEIVED_UNREAD) {
-                    vibrate();
-                    setState(STATE_MESSAGE_RECEIVED_READING);
+                if (data.getInteger(11) != null) {
+                    if (state == STATE_MESSAGE_RECEIVED_UNREAD) {
+                        vibrate();
+                        setState(STATE_MESSAGE_RECEIVED_READING);
+                    } else {
+                        apiBrowser.launch();
+                    }
                 }
 
                 PebbleKit.sendAckToPebble(getApplicationContext(), transactionId);
