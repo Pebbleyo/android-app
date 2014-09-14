@@ -71,6 +71,13 @@ public class Composition {
         }
     }
 
+    public String peek() {
+        if (draftMessage.length() > 0) {
+            return draftMessage.substring(draftMessage.length()-1);
+        }
+        return null;
+    }
+
     public String finish() {
         draftMessage += finishLetter();
         return draftMessage;

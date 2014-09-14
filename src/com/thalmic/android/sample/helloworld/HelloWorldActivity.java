@@ -209,7 +209,7 @@ public class HelloWorldActivity extends Activity {
 
                     if (state == STATE_COMPOSING) {
                         if (mArm == Arm.LEFT) {
-                            composition.next();
+                            compositionNextOrFinish();
                         } else {
                             composition.back();
                         }
@@ -221,7 +221,7 @@ public class HelloWorldActivity extends Activity {
 
                     if (state == STATE_COMPOSING) {
                         if (mArm == Arm.RIGHT) {
-                            composition.next();
+                            compositionNextOrFinish();
                         } else {
                             composition.back();
                         }
@@ -247,6 +247,15 @@ public class HelloWorldActivity extends Activity {
         }
     };
     private Composition composition;
+
+    private void compositionNextOrFinish() {
+        String prevChar = composition.peek();
+        if (prevChar != null && prevChar.equals(" ")) {
+            send(new Message(composition.finish()));
+        } else {
+            composition.next();
+        }
+    }
 
     private boolean setState(int newState) {
         if (state == newState) return false;
