@@ -389,8 +389,9 @@ public class HelloWorldActivity extends Activity {
                     if (state == STATE_MESSAGE_RECEIVED_UNREAD) {
                         vibrate();
                         setState(STATE_MESSAGE_RECEIVED_READING);
-                    } else {
+                    } else if (state == STATE_READY) {
                         apiBrowser.launch();
+                        setState(STATE_API_BROWSER_LIST);
                     }
                 }
 

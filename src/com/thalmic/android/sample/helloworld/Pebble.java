@@ -12,7 +12,7 @@ public class Pebble {
     public final static UUID PEBBLE_APP_UUID = UUID.fromString("1d139f51-14b0-4a9e-882e-91df056ff7fe");
     private static final int KEY_SET_INDEX = 6;
     private static final int KEY_DISPLAY_MESSAGE = 7;
-    private static final int KEY_SHOW_LIST = 8;
+    public static final int KEY_SHOW_LIST = 8;
     private final Context mContext;
 
     public Pebble(Context context) {
