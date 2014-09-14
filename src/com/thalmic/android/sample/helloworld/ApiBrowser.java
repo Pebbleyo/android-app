@@ -85,6 +85,15 @@ public class ApiBrowser {
                             i++;
                         }
                         mPebble.send(data);
+
+                        new Handler().postDelayed(new Runnable(){
+                            @Override
+                            public void run() {
+                                PebbleDictionary data2 = new PebbleDictionary();
+                                data2.addInt8(Pebble.KEY_SHOW_LIST, (byte) 42);
+                                mPebble.send(data2);
+                            }
+                        }, 500);
                     }
                 }, new Response.ErrorListener() {
 
