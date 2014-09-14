@@ -1,6 +1,7 @@
 package com.thalmic.android.sample.helloworld;
 
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 import com.getpebble.android.kit.PebbleKit;
 import com.getpebble.android.kit.util.PebbleDictionary;
@@ -53,9 +54,14 @@ public class Pebble {
         }
         send(data);
 
-        PebbleDictionary data2 = new PebbleDictionary();
-        data2.addInt8(KEY_SHOW_LIST, (byte) 42);
-        send(data2);
+        new Handler().postDelayed(new Runnable(){
+            @Override
+            public void run() {
+                PebbleDictionary data2 = new PebbleDictionary();
+                data2.addInt8(KEY_SHOW_LIST, (byte) 42);
+                send(data2);
+            }
+        }, 500);
     }
 
     public void setIndex(int index) {

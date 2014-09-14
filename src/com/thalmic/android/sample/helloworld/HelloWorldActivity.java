@@ -445,10 +445,16 @@ public class HelloWorldActivity extends Activity {
         }
     }
 
-    private void display(Message message) {
+    private void display(final Message message) {
         mMessageView.setText(message.toString());
         pebble.startApp();
-        pebble.displayMessage(message);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                pebble.displayMessage(message);
+                vibrate();
+            }
+        }, 500);
     }
 
     private void send(MessageResponse message) {
