@@ -18,22 +18,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.canvas.AssetInstaller;
-import com.canvas.LipiTKJNIInterface;
-import com.getpebble.android.kit.util.PebbleDictionary;
-import com.thalmic.myo.AbstractDeviceListener;
-import com.thalmic.myo.Arm;
-import com.thalmic.myo.DeviceListener;
-import com.thalmic.myo.Hub;
-import com.thalmic.myo.Myo;
-import com.thalmic.myo.Pose;
-import com.thalmic.myo.Quaternion;
-import com.thalmic.myo.XDirection;
+import com.thalmic.myo.*;
 import com.thalmic.myo.scanner.ScanActivity;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
@@ -49,8 +36,6 @@ public class HelloWorldActivity extends Activity {
     private int state;
 
     private static final int REQUEST_ENABLE_BT = 1;
-
-    private final static UUID PEBBLE_APP_UUID = UUID.fromString("1d139f51-14b0-4a9e-882e-91df056ff7fe");
 
     private Queue<Message> messageQueue = new LinkedList<Message>();
     private Message currentMessage;
@@ -178,8 +163,6 @@ public class HelloWorldActivity extends Activity {
 
             if (currentPose == pose) return;
             else currentPose = pose;
-
-            PebbleDictionary data = new PebbleDictionary();
 
             switch (pose) {
                 case UNKNOWN:
@@ -322,7 +305,7 @@ public class HelloWorldActivity extends Activity {
 
         if (connected) {
             pebble.startApp();
-            Log.i(getLocalClassName(), "Starting app with UUID " + PEBBLE_APP_UUID.toString());
+            Log.i(getLocalClassName(), "Starting app with UUID " + Pebble.PEBBLE_APP_UUID.toString());
         }
 
         Composition.init(this);

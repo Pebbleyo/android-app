@@ -8,7 +8,7 @@ import com.getpebble.android.kit.util.PebbleDictionary;
 import java.util.UUID;
 
 public class Pebble {
-    private final static UUID PEBBLE_APP_UUID = UUID.fromString("1d139f51-14b0-4a9e-882e-91df056ff7fe");
+    public final static UUID PEBBLE_APP_UUID = UUID.fromString("1d139f51-14b0-4a9e-882e-91df056ff7fe");
     private static final int KEY_DISPLAY_MESSAGE = 6;
     private final Context mContext;
 
