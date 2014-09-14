@@ -59,6 +59,8 @@ public class HelloWorldActivity extends Activity {
     private Float baseDrawYaw;
 
     private Pose currentPose;
+    private Pose previousPose;
+    private Myo mMyo;
     // Classes that inherit from AbstractDeviceListener can be used to receive events from Myo devices.
     // If you do not override an event, the default behavior is to do nothing.
     private DeviceListener mListener = new AbstractDeviceListener() {
@@ -72,6 +74,7 @@ public class HelloWorldActivity extends Activity {
             // Set the text color of the text view to cyan when a Myo connects.
             mTextView.setTextColor(Color.CYAN);
             mTextView.setText("Myo has connected");
+            mMyo = myo;
         }
         // onDisconnect() is called whenever a Myo has been disconnected.
         @Override
@@ -177,8 +180,12 @@ public class HelloWorldActivity extends Activity {
             // Handle the cases of the Pose enumeration, and change the text of the text view
             // based on the pose we receive.
 
-            if (currentPose == pose) return;
-            else currentPose = pose;
+            if (currentPose == pose) {
+                return;
+            } else {
+                previousPose = currentPose;
+                currentPose = pose;
+            }
 
             switch (pose) {
                 case UNKNOWN:
@@ -194,6 +201,9 @@ public class HelloWorldActivity extends Activity {
                             restTextId = R.string.arm_right;
                             break;
                     }
+                    if (state == STATE_COMPOSING && (previousPose == Pose.FIST || previousPose == Pose.THUMB_TO_PINKY)) {
+                        vibrate();
+                    }
                     mTextView.setText("Pose at rest");
                     break;
                 case FIST:
@@ -201,13 +211,17 @@ public class HelloWorldActivity extends Activity {
                     mTextView.setText("Pose at fist / thumb to pinky");
 
                     if (state == STATE_MESSAGE_RECEIVED_READING) {
+                        vibrate();
                         setState(STATE_RESPONDING);
                     } else if (state == STATE_RESPONDING) {
+                        vibrate();
                         if (currentIndex != MAX_LIST_ITEMS - 1) {
                             send(currentResponses.get(currentIndex));
                         } else {
                             setState(STATE_COMPOSING);
                         }
+                    } else if (state == STATE_COMPOSING) {
+                        vibrate();
                     }
 
                     break;
@@ -215,6 +229,7 @@ public class HelloWorldActivity extends Activity {
                     mTextView.setText("Pose at wave in");
 
                     if (state == STATE_COMPOSING) {
+                        vibrate();
                         if (mArm == Arm.LEFT) {
                             compositionNextOrFinish();
                         } else {
@@ -227,6 +242,7 @@ public class HelloWorldActivity extends Activity {
                     mTextView.setText("Pose at wave out");
 
                     if (state == STATE_COMPOSING) {
+                        vibrate();
                         if (mArm == Arm.RIGHT) {
                             compositionNextOrFinish();
                         } else {
@@ -237,6 +253,8 @@ public class HelloWorldActivity extends Activity {
                     break;
                 case FINGERS_SPREAD:
                     mTextView.setText("Pose at fingers spread");
+
+                    vibrate();
 
                     switch (state) {
                         case STATE_MESSAGE_RECEIVED_READING:
@@ -430,5 +448,9 @@ public class HelloWorldActivity extends Activity {
         mListView.setAdapter(null);
 
         // TODO: go to next message in the queue
+    }
+
+    private void vibrate() {
+        mMyo.vibrate(Myo.VibrationType.SHORT);
     }
 }
