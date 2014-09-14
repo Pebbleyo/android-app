@@ -124,12 +124,16 @@ public class HelloWorldActivity extends Activity {
                 case STATE_RESPONDING:
                     if (baseScrollPitch == null) baseScrollPitch = pitch;
 
-                    currentIndex = (int) ((pitch - baseScrollPitch) / MAX_LIST_ITEMS);
-                    if (currentIndex < 0) currentIndex = 0;
-                    if (currentIndex >= MAX_LIST_ITEMS) currentIndex = MAX_LIST_ITEMS-1;
+                    int newIndex = (int) ((pitch - baseScrollPitch) / MAX_LIST_ITEMS);
+                    if (newIndex < 0) newIndex = 0;
+                    if (newIndex >= MAX_LIST_ITEMS) newIndex = MAX_LIST_ITEMS-1;
 
-                    mListView.setItemChecked(currentIndex, true);
-                    pebble.setIndex(currentIndex);
+                    if (newIndex != currentIndex) {
+                        currentIndex = newIndex;
+                        mListView.setItemChecked(currentIndex, true);
+                        pebble.setIndex(currentIndex);
+                    }
+
                     break;
                 case STATE_COMPOSING:
                     if (baseDrawPitch == null) baseDrawPitch = pitch;
