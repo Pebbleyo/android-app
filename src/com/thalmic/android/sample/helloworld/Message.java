@@ -15,9 +15,16 @@ public class Message {
 
     public MessageResponses getResponses() {
         MessageResponses list = new MessageResponses();
+        String[] responses = Language.getResponses(mText);
 
         for (int i=0; i<HelloWorldActivity.MAX_LIST_ITEMS - 1; i++) {
-            list.add(createMessageResponse(Double.toString(Math.random())));
+            String body;
+            if (i<responses.length) {
+                body = responses[i];
+            } else {
+                body = " ";
+            }
+            list.add(createMessageResponse(body));
         }
         list.add(createMessageResponse("Compose..."));
 
