@@ -50,12 +50,12 @@ public class Pebble {
         PebbleDictionary data = new PebbleDictionary();
         for (int i=0; i<messageResponses.size(); i++) {
             data.addString(i+1, messageResponses.get(i).toString());
-            send(data);
         }
+        send(data);
 
         PebbleDictionary data2 = new PebbleDictionary();
-        data.addInt8(KEY_SHOW_LIST, (byte) 42);
-        send(data);
+        data2.addInt8(KEY_SHOW_LIST, (byte) 42);
+        send(data2);
     }
 
     public void setIndex(int index) {
